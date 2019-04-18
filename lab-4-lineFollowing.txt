@@ -1,0 +1,142 @@
+//Written by Leon Johnson and Lionardo Abundes-Pacheco April 17, 2019
+
+#include "Robot_QTR_Sensor.h"
+
+#include "Romi_Motor_Power.h"
+
+#include "Encoder.h"
+
+//Purpose of this lab: Robot should follow a black line.
+
+
+/* Defines pin configuration of robot */
+
+#include "Robot_Pins_v2.h"
+
+#define LS_TIMEOUT 2500
+
+Romi_Motor_Power left_motor;
+
+Romi_Motor_Power right_motor;
+
+ 
+//used for line sensor (line following)
+
+uint8_t     line_loc, default_motor_speed;
+
+uint16_t    left_motor_speed, right_motor_speed;
+ 
+
+void setup()
+
+{
+
+    /* Initialize both motors */
+
+    left_motor.begin(31,14,40);
+
+    right_motor.begin(11,15,39);
+
+ 
+
+    /* Initialize line sensor */
+
+    qtr8_sensor_init(65,48,64,47,52,68,53,69,LS_TIMEOUT,61);
+
+ 
+
+    /* Right button on Launchpad */
+
+    pinMode(PUSH2, INPUT_PULLUP);   //will do the line following
+
+}
+
+ 
+
+void loop()
+
+{
+ 
+    /* Wait until button is pressed to start robot */
+
+    while(digitalRead(PUSH2));
+
+    lineFollowing();
+
+}
+
+ 
+void lineFollowing()
+{
+ 
+       default_motor_speed = 50;
+
+ 
+       // By default the motors are disabled so turn them on
+
+       left_motor.enableMotor();
+
+       right_motor.enableMotor();
+
+ 
+
+       while(true) {
+
+           line_loc = lineLocation(DARK_LINE);
+
+ 
+
+           if (line_loc == LINE_RIGHT)
+
+           {
+
+               // Line is to the left of the sensor.
+
+               // Move robot to the left to center it to the line.
+
+
+               right_motor_speed = 35;
+
+               left_motor_speed  = 0;
+
+           }
+
+           else if(line_loc == LINE_LEFT)
+
+           {
+
+               /* Line is to the right of the sensor.
+
+                  Move robot to the right to center it to the line.
+
+               */
+
+               left_motor_speed  = 35;
+
+               right_motor_speed = 0;
+
+           }
+
+ 
+           else
+
+           {
+
+               /* Line is center so move robot at the same time */
+
+               right_motor_speed = default_motor_speed;
+
+               left_motor_speed  = default_motor_speed;
+
+           }
+
+ 
+           /* Set pwm value of motors directly. Range is (stop) 0-255 (max speed)*/
+
+           left_motor.setSpeedRaw(left_motor_speed);
+
+           right_motor.setSpeedRaw(right_motor_speed);
+
+       }
+
+}
